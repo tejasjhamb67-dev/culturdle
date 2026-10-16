@@ -154,6 +154,8 @@ describe("validateRow", () => {
   it("rejects leaks, missing hints and bad options", () => {
     expect(leakedWords("Sholay", "Moment: the Sholay gang")).toEqual(["sholay"]);
     expect(leakedWords("Sholay", "Moment: the ____ gang")).toEqual([]);
+    expect(leakedWords("Angel — Shaggy", "Artist: Shaggy")).toEqual([]);
+    expect(leakedWords("Angel — Shaggy", "Title: Angel")).toEqual(["angel"]);
     const ok = { answer: "Sholay", hints: ["a", "b", "c", "d", "e", "f"], wrongOptions: ["Don", "Deewaar", "Zanjeer"] };
     expect(validateRow(ok)).toEqual([]);
     expect(validateRow({ ...ok, hints: ["a", "b", "", "d", "e", "f"] })).toContain("fewer than 6 hints");

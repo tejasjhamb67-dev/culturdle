@@ -25,5 +25,7 @@ const STOP_WORDS = new Set([
 
 /** Distinctive words of an answer (normalised, 3+ chars, not stop words). */
 export function answerWords(answer: string): string[] {
-  return [...new Set(normalize(answer).split(" ").filter((w) => w.length >= 3 && !STOP_WORDS.has(w)))];
+  // "Title — Artist" answers disambiguate same-titled songs; only the title is the secret.
+  const title = answer.split(" — ")[0];
+  return [...new Set(normalize(title).split(" ").filter((w) => w.length >= 3 && !STOP_WORDS.has(w)))];
 }

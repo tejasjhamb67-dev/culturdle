@@ -47,7 +47,10 @@ sc.loc[low, "reason"] = sc[low].apply(weakest, axis=1)
 sc["keep"] = sc.reason.isna()
 
 # ---- lookups for hints
-imdb = pd.read_csv("movies_imdb.csv").set_index("ID")
+imdb = pd.read_csv("movies_imdb.csv")
+imdb = imdb.merge(pd.read_csv("imdb_genres.csv"), on="tconst", how="left")
+imdb["imdb_genres"] = imdb.genres.where(imdb.genres.notna() & (imdb.genres != "\\N"), imdb.imdb_genres)
+imdb = imdb.set_index("ID")
 casts = json.load(open("wiki_casts.json"))
 sfilm = pd.read_csv("songs_film.csv").set_index("ID")
 bb = pd.read_csv(f"{SRC}/rwd-billboard-data/data-out/hot-100-current.csv", usecols=["title", "performer", "peak_pos", "wks_on_chart"])
@@ -92,8 +95,9 @@ for name, df in sheets.items():
             hints = movie_hints(r, [x for x in g if x and x != "\\N"], costars)
         elif name == "Music":
             if r.Edition == "Global" and r["Answer type"] == "Song":
-                others = hits_by(r.Artist, r.Answer)
-                hints = song_global_hints(r, others[0] if others else None)
+                lead = re.split(r"\s+(?:Featuring|Feat\.?|With|And|&|x|X|,)\s+", str(r.Artist))[0]
+                others = hits_by(lead, str(r.Answer).split(" — ")[0])
+                hints = song_global_hints(r, others[:3])
             elif r.Edition == "Global":
                 top = hits_by(r.Answer)
                 hints = artist_global_hints(r, top[0] if top else None)
@@ -106,6 +110,8 @@ for name, df in sheets.items():
         else:
             hints = icon_hints(r)
         hints = [mask(h, r.Answer) for h in hints]
+        # a hint that masks down to nothing still says something: the answer contains that name
+        hints = [f"{h.split(':', 1)[0]}: the same name appears in the answer" if isinstance(h, str) and re.fullmatch(r"[^:]{1,34}:\s*(?:____[\s,·.'&-]*)+", h) else h for h in hints]
         bad = len([h for h in hints if clean(h)]) < 6 or any(answer_words(r.Answer) & set(norm(h).split()) for h in hints if isinstance(h, str))
         if bad:
             removed.append({"ID": r.ID, "Sheet": name, "Edition": r.Edition, "Answer": r.Answer, "Year": r.get("Year") if name != "Icons" else None,

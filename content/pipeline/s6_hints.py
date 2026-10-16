@@ -12,7 +12,8 @@ def norm(s):
     return re.sub(r"^(the|a|an) ", "", s)
 
 def answer_words(a):
-    return {w for w in norm(a).split() if len(w) >= 3 and w not in STOP}
+    # "Title — Artist" answers: only the title is secret (matches @culturdle/core answerWords)
+    return {w for w in norm(str(a).split(" — ")[0]).split() if len(w) >= 3 and w not in STOP}
 
 def mask(text, answer):
     """Replace any word of the answer with ____ (same rule the importer checks)."""
@@ -29,12 +30,18 @@ def clean(s):
 
 def initials_shape(title):
     """'Title initials: D. W. A. B. D. O. (6 words)' — informative but not the answer."""
-    t = re.sub(r"\(.*?\)", " ", str(title)).strip() or str(title)
+    title = str(title).split(" — ")[0]
+    t = re.sub(r"\(.*?\)", " ", title).strip() or title
     words = [w for w in re.split(r"\s+", re.sub(r"[^\w\s'’-]", " ", t)) if w]
     if len(words) == 1:
         w = words[0]
         return f"Title: one word, {len(w)} letters, starts with '{w[0].upper()}'"
     return f"Title initials: {' '.join(w[0].upper() + '.' for w in words)} ({len(words)} words)"
+
+def first_letters(name):
+    """'Starts: Ari… Gra…' — the strong last nudge, shown alongside the four options."""
+    words = [w for w in str(name).split() if w]
+    return "Starts: " + " ".join(w[:3] + "…" if len(w) > 3 else w[0] + "…" for w in words)
 
 def name_shape(name):
     words = str(name).split()
@@ -54,7 +61,7 @@ def label_of(h):
 # ---------------- Movies
 def movie_hints(r, genres, costars):
     year = int(r.Year) if pd.notna(r.Year) else None
-    g = ", ".join(genres[:2]) if genres else (after(r["Hint 1 (shown at start)"]) or "").split("·")[0].strip()
+    g = ", ".join(genres[:3]) if genres else (after(r["Hint 1 (shown at start)"]) or "").split("·")[0].strip()
     h1 = f"Genre: {g} · {r.Industry} · released {year}" if year else f"Genre: {g} · {r.Industry}"
     h2 = f"Directed by: {r.Director}" if clean(r.Director) else r["Hint 4 (after miss 3)"]
     h3 = r["Hint 3 (after miss 2)"]
@@ -72,7 +79,7 @@ def movie_hints(r, genres, costars):
     return [h1, h2, h3, h4, h5, h6]
 
 # ---------------- Music
-def song_global_hints(r, other_hit):
+def song_global_hints(r, other_hits):
     year = int(r.Year) if pd.notna(r.Year) else None
     genre = (after(r["Hint 1 (shown at start)"]) or "").split("·")[0].strip()
     h2o = str(r["Hint 2 (after miss 1)"])
@@ -82,11 +89,16 @@ def song_global_hints(r, other_hit):
     hs = [r["Hint 3 (after miss 2)"], r["Hint 4 (after miss 3)"]]
     album = next((h for h in hs if label_of(h).startswith("Album")), None)
     other = next((h for h in hs if label_of(h).startswith("Same artist")), None)
-    if not other and other_hit:
-        other = f"Same artist also charted with: '{other_hit}'"
-    cands = [c for c in [album, other, f"Chart year: entered the Hot 100 in {year}" if year else None] if c]
+    seen = re.findall(r"'([^']+)'", other or "")
+    hits = [h for h in other_hits if norm(h) not in {norm(x) for x in seen}]
+    if not other and hits:
+        other, hits = f"Same artist also charted with: '{hits[0]}'", hits[1:]
+    more = f"Another hit by the same artist: '{hits[0]}'" if hits else None
+    cands = [c for c in [album, other, more] if c]
+    fill = [f"Artist initials: {'.'.join(w[0].upper() for w in str(r.Artist).split() if w[0].isalnum())}.",
+            "Artist " + first_letters(r.Artist).replace("Starts", "starts")]
     while len(cands) < 2:
-        cands.append(f"Artist initials: {'.'.join(w[0].upper() for w in str(r.Artist).split())}.")
+        cands.append(fill.pop(0))
     h5 = f"Artist: {r.Artist}"
     return [h1, h2, cands[0], cands[1], h5, initials_shape(r.Answer)]
 
@@ -127,12 +139,12 @@ def icon_hints(r):
     shape = name_shape(r.Answer)
     if str(r.Source).startswith("Derived"):
         # Field, worked most with director, co-star, early film, big film, initials
-        return [h[0], h[4], h[3], h[2], f"{h[1]} · initials {after(h[5])}", shape]
+        return [h[0], h[4], h[3], h[2], f"{h[1]} · {shape.split(': ', 1)[1]}", first_letters(r.Answer)]
     if r["Answer type"] == "Brand":
         origin = after(h[0]); industry = after(h[1])
         return [f"Industry: {industry} · {origin}", h[3], h[2], h[4], h[5], shape]
     # curated person / band: Era, Field, Moment, Known for, Connection, Initials
     era = after(h[0]); field = after(h[1])
-    return [f"Field: {field} · {era}", h[2], h[3], h[4], h[5], shape]
+    return [f"Field: {field} · {era}", h[2], h[3], h[4], shape, first_letters(r.Answer)]
 
 HINT_COLS = ["Hint 1 (shown at start)", "Hint 2 (after miss 1)", "Hint 3 (after miss 2)", "Hint 4 (after miss 3)", "Hint 5 (after miss 4)", "Hint 6 (after miss 5, with options)"]
