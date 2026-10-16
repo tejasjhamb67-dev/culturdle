@@ -53,12 +53,41 @@ function Card({ title, children }: { title: string; children: React.ReactNode })
   return <section className="mb-4 rounded-2xl border border-border bg-surface p-4"><h2 className="font-serif font-semibold mb-2 text-2xl">{title}</h2>{children}</section>;
 }
 
+function ImportBank({ onDone }: { onDone: () => void }) {
+  const [status, setStatus] = useState("draft");
+  const [msg, setMsg] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
+  const run = async () => {
+    setBusy(true); setMsg("Importing… this takes about a minute.");
+    try {
+      const r = await api("/api/admin/import", { method: "POST", json: { status } });
+      setMsg(`Imported ${r.imported}, rejected ${r.rejected}, scheduled ${r.scheduled} new slots.${r.alerts?.length ? " " + r.alerts.join(" ") : ""}`);
+      onDone();
+    } catch (e: any) { setMsg(e.message); }
+    setBusy(false);
+  };
+  return (
+    <Card title="Question bank">
+      <p className="mb-2 text-sm text-muted">Imports content/Culturdle_Question_Bank.xlsx from this deployment. New rows get the status below; existing rows keep theirs. The schedule only uses live rows.</p>
+      <div className="flex flex-wrap items-center gap-2 text-sm">
+        <select value={status} onChange={(e) => setStatus(e.target.value)} className="rounded-lg border border-border bg-bg px-2 py-1.5">
+          <option value="draft">New rows as draft</option><option value="reviewed">New rows as reviewed</option><option value="live">New rows as live</option>
+        </select>
+        <button disabled={busy} onClick={run} className="rounded-full bg-correct px-4 py-1.5 font-semibold text-on-correct disabled:opacity-40">Import</button>
+      </div>
+      {msg && <p className="mt-2 text-sm">{msg}</p>}
+    </Card>
+  );
+}
+
 function Overview() {
   const [d, setD] = useState<any>(null);
-  useEffect(() => { api("/api/admin/overview").then(setD); }, []);
+  const load = () => api("/api/admin/overview").then(setD);
+  useEffect(() => { void load(); }, []);
   if (!d) return <p className="text-muted">Loading…</p>;
   return (
     <div className="grid gap-4 lg:grid-cols-2">
+      <ImportBank onDone={load} />
       <Card title={`Today · ${d.today}`}>
         <p>{d.players} players · {d.dailyActive} played today</p>
         <ul className="mt-2 text-sm text-muted">{d.events.map((e: any) => <li key={e.name}>{e.name}: {e.n} (7d)</li>)}</ul>
