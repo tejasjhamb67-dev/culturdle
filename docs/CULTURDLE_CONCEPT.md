@@ -127,7 +127,8 @@ The question bank is in `Culturdle_Question_Bank.xlsx`: 15,110 ready-to-schedule
 
 - All 733 curated icon and brand rows and 81 curated recent films need a manual check.
 - Movie "Moment" hints currently reuse synopsis text from TMDB and IMDb and must be rewritten in original words.
-- Difficulty labels are heuristic until real solve rates replace them.
+- Difficulty labels come from the v2 fame score (top 45% Easy, next 35% Medium, last 20% Hard per edition) until real solve rates replace them.
+- Scope (v2 bank): theatrical releases and well-known names only. Every row carries a 0–10 fame score; rows below 6 were cut. See the Scoring and Removed tabs of the workbook.
 
 ## 9. Business model
 
@@ -163,8 +164,8 @@ Accounts are optional; signing in syncs streaks across devices and unlocks frien
 | Puzzles per player per day | Out of six |
 | D1 / D7 / D30 retention | Return on day 1, 7, 30 |
 | Share rate | Shares per finished puzzle |
-| Solve rate by puzzle | Solved within six guesses; target band 45–55% |
-| Median guess (solvers) | Target 5 |
+| Solve rate by puzzle | Solved within six guesses; target band 75–90% |
+| Median guess (solvers) | Target 3–4 |
 | Friends per active player | Social graph depth |
 | Culturdle+ conversion | Paying ÷ monthly active players |
 

@@ -6,7 +6,8 @@ import { invalidatePools } from "./pools";
 /**
  * Import Culturdle_Question_Bank.xlsx into `puzzles` (design §C3). New rows get `status`;
  * existing rows keep theirs unless forceStatus, so re-importing never undoes review work.
- * Invalid rows are rejected into import_log.
+ * Invalid rows are rejected into import_log. With retireMissing, live/reviewed/draft puzzles that are no
+ * longer in the workbook become 'retired' (they stay in past schedules and archives, but are never picked again).
  */
 const SHEETS: Record<string, Mode> = { Movies: "movie", Music: "music", Icons: "icon" };
 
@@ -23,7 +24,7 @@ function cellText(v: ExcelJS.CellValue): string {
 
 export type ImportStatus = "draft" | "reviewed" | "live";
 
-export async function importBank(file: string, opts: { status?: ImportStatus; forceStatus?: boolean } = {}) {
+export async function importBank(file: string, opts: { status?: ImportStatus; forceStatus?: boolean; retireMissing?: boolean } = {}) {
   const status = opts.status ?? "draft";
   const forceStatus = !!opts.forceStatus;
   const wb = new ExcelJS.Workbook();
@@ -45,6 +46,7 @@ export async function importBank(file: string, opts: { status?: ImportStatus; fo
       hints: [1, 2, 3, 4, 5, 6].map((n) => col(`Hint ${n}`)),
       wrong: ["A", "B", "C"].map((l) => col(`Wrong option ${l}`)),
       reveal: col("Reveal-card fact"), source: col("Source"), verify: col("Verify flag"),
+      fame: col("Fame score"),
       meta: ["Director", "Music", "Lead", "Artist"].map((k) => [k.toLowerCase(), header.findIndex((h) => h === k)] as const),
     };
     const seen = new Map<string, string>();
@@ -72,6 +74,7 @@ export async function importBank(file: string, opts: { status?: ImportStatus; fo
       seen.set(dupKey, id);
       const meta: Record<string, string> = {};
       for (const [k, i] of C.meta) if (i >= 0 && get(i)) meta[k] = get(i);
+      if (C.fame >= 0 && get(C.fame)) meta.fame = get(C.fame);
       const yearText = get(C.year);
       rows.push({
         id, edition, mode,
@@ -89,6 +92,7 @@ export async function importBank(file: string, opts: { status?: ImportStatus; fo
   }
 
   const BATCH = 500;
+  let retired = 0;
   await tx(async (q) => {
     for (let i = 0; i < rows.length; i += BATCH) {
       const chunk = JSON.stringify(rows.slice(i, i + BATCH));
@@ -113,6 +117,16 @@ export async function importBank(file: string, opts: { status?: ImportStatus; fo
         [chunk],
       );
     }
+    if (opts.retireMissing && rows.length) {
+      retired = (
+        await q(
+          `update puzzles set status = 'retired', updated_at = now()
+           where status <> 'retired' and id <> all(array(select jsonb_array_elements_text($1::text::jsonb)))
+           returning id`,
+          [JSON.stringify(rows.map((r) => r.id))],
+        )
+      ).length;
+    }
     await q(`delete from import_log`);
     for (let i = 0; i < rejected.length; i += BATCH) {
       await q(
@@ -128,5 +142,5 @@ export async function importBank(file: string, opts: { status?: ImportStatus; fo
     `select edition, mode, status, count(*)::int as n from puzzles group by 1,2,3 order by 1,2,3`,
   );
   invalidatePools();
-  return { imported: rows.length, rejected, counts };
+  return { imported: rows.length, rejected, retired, counts };
 }

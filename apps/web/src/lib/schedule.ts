@@ -102,6 +102,28 @@ async function fill(through: string) {
   return { added, alerts };
 }
 
+/**
+ * Drop future slots (after `after`, default today IST) that point at puzzles which are no longer live, plus
+ * every later slot in the same pool, so the next fill re-picks them from the current bank. Slots on or before
+ * `after` are left alone: players may already have played them. Overrides are re-applied by the fill.
+ */
+export async function rescheduleFuture(after = istDate()) {
+  const dropped = await query(
+    `with stale as (
+       select s.edition, s.mode, min(s.play_date) as first
+       from schedule s join puzzles p on p.id = s.puzzle_id
+       where s.play_date > $1::date and p.status <> 'live'
+       group by 1, 2
+     )
+     delete from schedule s using stale
+     where s.edition = stale.edition and s.mode = stale.mode and s.play_date >= stale.first
+     returning 1`,
+    [after],
+  );
+  const res = await ensureSchedule();
+  return { dropped: dropped.length, ...res };
+}
+
 export async function runway() {
   return query<{ edition: Edition; mode: Mode; live: number; scheduled: number; days_left: number }>(
     `select p.edition, p.mode, count(*)::int as live,

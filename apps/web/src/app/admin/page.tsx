@@ -338,12 +338,12 @@ function Stats() {
   const [rows, setRows] = useState<any[]>([]);
   useEffect(() => { api("/api/admin/stats").then((r) => setRows(r.rows)); }, []);
   return (
-    <Card title="Solve rates (target 45–55%)">
+    <Card title="Solve rates (target 75–90%)">
       <table className="w-full text-sm">
         <thead className="text-left text-muted"><tr><th>Puzzle</th><th>Pool</th><th>Label</th><th>Plays</th><th>Solved</th><th>Median guess</th><th>Suggest</th></tr></thead>
         <tbody>{rows.map((r) => (
           <tr key={r.id} className="border-t border-border"><td>{r.answer}</td><td>{r.edition} {r.mode}</td><td>{r.difficulty}</td><td>{r.plays}</td>
-            <td className={cx(r.solve_rate < 20 || r.solve_rate > 80 ? "text-[#c8323a]" : r.solve_rate >= 45 && r.solve_rate <= 55 ? "text-correct" : "")}>{r.solve_rate}%</td>
+            <td className={cx(r.solve_rate < 60 || r.solve_rate > 97 ? "text-[#c8323a]" : r.solve_rate >= 75 && r.solve_rate <= 90 ? "text-correct" : "")}>{r.solve_rate}%</td>
             <td>{r.median_guess ?? "—"}</td><td>{r.suggested_difficulty ?? "needs 30 plays"}</td></tr>
         ))}</tbody>
       </table>

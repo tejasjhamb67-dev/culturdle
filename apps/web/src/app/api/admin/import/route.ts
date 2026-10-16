@@ -3,7 +3,7 @@ import path from "node:path";
 import { requireAdmin } from "@/lib/admin";
 import { body, handler, HttpError, json } from "@/lib/http";
 import { importBank, type ImportStatus } from "@/lib/importBank";
-import { ensureSchedule } from "@/lib/schedule";
+import { ensureSchedule, rescheduleFuture } from "@/lib/schedule";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 300;
@@ -16,12 +16,20 @@ function bankPath(): string {
   throw new HttpError(500, "no_bank", "Question bank workbook not found in the deployment");
 }
 
-/** Re-import the bundled question bank (and refill the schedule). Admin only. */
+type ImportBody = { status?: ImportStatus; forceStatus?: boolean; retireMissing?: boolean };
+
+/**
+ * Re-import the bundled question bank (and refill the schedule). Admin only.
+ * retireMissing retires puzzles that were cut from the workbook and re-picks any future slots that used them.
+ */
 export const POST = handler(async (req: Request) => {
   await requireAdmin();
-  const b = await body<{ status?: ImportStatus; forceStatus?: boolean }>(req).catch(() => ({}) as { status?: ImportStatus; forceStatus?: boolean });
+  const b = await body<ImportBody>(req).catch(() => ({}) as ImportBody);
   if (b.status && !["draft", "reviewed", "live"].includes(b.status)) throw new HttpError(400, "bad_status");
-  const res = await importBank(bankPath(), { status: b.status ?? "draft", forceStatus: b.forceStatus });
-  const sched = await ensureSchedule();
-  return json({ imported: res.imported, rejected: res.rejected.length, counts: res.counts, scheduled: sched.added, alerts: sched.alerts });
+  const res = await importBank(bankPath(), { status: b.status ?? "draft", forceStatus: b.forceStatus, retireMissing: b.retireMissing });
+  const sched = b.retireMissing ? await rescheduleFuture() : { dropped: 0, ...(await ensureSchedule()) };
+  return json({
+    imported: res.imported, rejected: res.rejected.length, retired: res.retired, counts: res.counts,
+    unscheduled: sched.dropped, scheduled: sched.added, alerts: sched.alerts,
+  });
 });

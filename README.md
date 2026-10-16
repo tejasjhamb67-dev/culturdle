@@ -32,7 +32,7 @@ database server. Set `DATABASE_URL` to use Supabase or any other Postgres instea
 
 | Command | Does |
 |---|---|
-| `pnpm import:bank path/to.xlsx [--status draft\|reviewed\|live] [--force-status]` | Upserts the bank. New rows get `--status` (default `draft`); existing rows keep their status. Invalid rows are rejected into `import_log` and `.data/import-report.csv`. |
+| `pnpm import:bank path/to.xlsx [--status draft\|reviewed\|live] [--force-status] [--retire-missing]` | Upserts the bank. New rows get `--status` (default `draft`); existing rows keep their status. Invalid rows are rejected into `import_log` and `.data/import-report.csv`. `--retire-missing` retires puzzles no longer in the workbook and re-picks future schedule slots that used them (today and earlier are never touched). The admin endpoint `POST /api/admin/import` takes the same options as JSON (`status`, `forceStatus`, `retireMissing`). |
 | `pnpm schedule` | Fills the schedule 60 days ahead and prints runway and alerts. |
 | `pnpm db:migrate` | Applies migrations (the server also self-migrates on first connection). |
 | `pnpm test` | Core unit tests and backend integration tests (in-memory PGlite). |

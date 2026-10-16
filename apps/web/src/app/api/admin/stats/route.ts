@@ -13,8 +13,8 @@ export const GET = handler(async () => {
             round(100.0 * count(*) filter (where pl.solved) / nullif(count(*), 0))::int as solve_rate,
             percentile_cont(0.5) within group (order by pl.guess_count) filter (where pl.solved) as median_guess,
             case when count(*) < 30 then null
-                 when 100.0 * count(*) filter (where pl.solved) / count(*) > 60 then 'Easy'
-                 when 100.0 * count(*) filter (where pl.solved) / count(*) >= 40 then 'Medium'
+                 when 100.0 * count(*) filter (where pl.solved) / count(*) > 90 then 'Easy'
+                 when 100.0 * count(*) filter (where pl.solved) / count(*) >= 75 then 'Medium'
                  else 'Hard' end as suggested_difficulty
      from plays pl join puzzles p on p.id = pl.puzzle_id
      where pl.finished_at is not null and not pl.is_archive

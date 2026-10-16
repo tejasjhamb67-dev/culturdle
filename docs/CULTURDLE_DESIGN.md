@@ -33,9 +33,9 @@ The ladder runs from ambiguous to clearer, but never hands over the answer:
 
 **Targets** (to be tuned from live data):
 
-- 45–55% of players solve each puzzle (including solves from the four options).
-- Median solve on guess 5 among solvers.
-- Under 3% solve on guess 1.
+- 75–90% of players solve each puzzle (including solves from the four options). Raised from 45–55% after playtest feedback: hints now name concrete facts (director, co-stars, lead, singer, film) rather than oblique clues.
+- Median solve on guess 3–4 among solvers.
+- Under 10% solve on guess 1.
 
 **Rules for any hint**
 
@@ -63,7 +63,7 @@ Shuffle the four options with a seed of `date + edition + mode`, so every player
 | Sat | Hard |
 | Sun | Easy or Medium, "Cult Classic" pick |
 
-- After 30 days live, recompute difficulty from solve rate per puzzle: over 60% solved is Easy, 40–60% is Medium, under 40% is Hard. Retire or rewrite puzzles below 20% or above 80%. Use this to relabel rows that share a director, artist or decade.
+- After 30 days live, recompute difficulty from solve rate per puzzle: over 90% solved is Easy, 75–90% is Medium, under 75% is Hard. Retire or rewrite puzzles below 60% or above 97%. Use this to relabel rows that share a director, artist or decade.
 
 ### A5. Habit loop
 
@@ -381,7 +381,7 @@ The answer and later hints never reach the client before they are earned.
 - Every Movie "Moment" hint rewritten in original words.
 - All six daily puzzles playable on web, iOS and Android as a guest.
 - The share block renders correctly in WhatsApp, X and Instagram Stories.
-- A playtest of the first 14 days with 20+ players shows a solve rate between 45% and 55%.
+- A playtest of the first 14 days with 20+ players shows a solve rate between 75% and 90%.
 
 ---
 
