@@ -20,7 +20,12 @@ export function handler<A extends unknown[]>(fn: (...args: A) => Promise<Respons
         return json({ error: e.code, message: e.message, ...e.extra }, e.status);
       }
       console.error(e);
-      return json({ error: "server_error", message: "Something went wrong" }, 500);
+      // Admin routes are already authenticated; give them the real reason to speed up operations.
+      const req = args[0] instanceof Request ? args[0] : null;
+      const detail = req && new URL(req.url).pathname.startsWith("/api/admin/")
+        ? String((e as Error)?.message ?? e).replace(/postgres(ql)?:\/\/\S+/g, "[url]").slice(0, 300)
+        : undefined;
+      return json({ error: "server_error", message: "Something went wrong", ...(detail ? { detail } : {}) }, 500);
     }
   };
 }
