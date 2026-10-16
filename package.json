@@ -1,0 +1,15 @@
+{
+  "name": "culturdle",
+  "private": true,
+  "packageManager": "pnpm@10.28.0",
+  "scripts": {
+    "dev": "pnpm --filter @culturdle/web dev",
+    "build": "pnpm --filter @culturdle/web build",
+    "test": "pnpm -r test",
+    "typecheck": "pnpm -r typecheck",
+    "setup:local": "pnpm --filter @culturdle/web setup:local",
+    "import:bank": "pnpm --filter @culturdle/web import:bank",
+    "schedule": "pnpm --filter @culturdle/web schedule",
+    "db:migrate": "pnpm --filter @culturdle/web db:migrate"
+  }
+}

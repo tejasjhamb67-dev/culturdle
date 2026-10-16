@@ -1,0 +1,36 @@
+{
+  "name": "@culturdle/web",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "next dev",
+    "build": "node scripts/gen-migrations.mjs && next build",
+    "start": "next start",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "db:migrate": "tsx scripts/migrate.ts",
+    "import:bank": "tsx scripts/import-bank.ts",
+    "schedule": "tsx scripts/schedule.ts",
+    "setup:local": "tsx scripts/migrate.ts && tsx scripts/import-bank.ts ../../content/Culturdle_Question_Bank.xlsx --status live && tsx scripts/schedule.ts"
+  },
+  "dependencies": {
+    "@culturdle/core": "workspace:*",
+    "@electric-sql/pglite": "^0.5.10",
+    "next": "^16.4.2",
+    "postgres": "^3.4.9",
+    "react": "^19.3.1",
+    "react-dom": "^19.3.1"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4.3.3",
+    "@types/node": "^24",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "exceljs": "^4.4.0",
+    "tailwindcss": "^4.3.3",
+    "tsx": "^4.23.15",
+    "typescript": "^5.9.3",
+    "vitest": "^4.0.5"
+  }
+}
