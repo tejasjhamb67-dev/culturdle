@@ -87,7 +87,7 @@ async function fill(through: string) {
         const res = await query(
           `insert into schedule (play_date, edition, mode, puzzle_id, puzzle_number)
            select r.play_date::date, r.edition::edition, r.mode::mode, r.puzzle_id, r.puzzle_number
-           from jsonb_to_recordset($1::jsonb) as r(play_date text, edition text, mode text, puzzle_id text, puzzle_number int)
+           from jsonb_to_recordset($1::text::jsonb) as r(play_date text, edition text, mode text, puzzle_id text, puzzle_number int)
            on conflict do nothing returning 1`,
           [JSON.stringify(inserts)],
         );

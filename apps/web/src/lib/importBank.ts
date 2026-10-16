@@ -100,7 +100,7 @@ export async function importBank(file: string, opts: { status?: ImportStatus; fo
                 array(select jsonb_array_elements_text(r.hints)),
                 array(select jsonb_array_elements_text(r.wrong_options)),
                 r.reveal_fact, r.meta, r.source, r.verify_flag, r.status::puzzle_status, now()
-         from jsonb_to_recordset($1::jsonb) as r(id text, edition text, mode text, answer_type text, category text,
+         from jsonb_to_recordset($1::text::jsonb) as r(id text, edition text, mode text, answer_type text, category text,
               difficulty text, answer text, aliases jsonb, year int, hints jsonb, wrong_options jsonb,
               reveal_fact text, meta jsonb, source text, verify_flag text, status text)
          on conflict (id) do update set
@@ -118,7 +118,7 @@ export async function importBank(file: string, opts: { status?: ImportStatus; fo
       await q(
         `insert into import_log (sheet, row_id, errors)
          select r.sheet, r.id, array(select jsonb_array_elements_text(r.errors))
-         from jsonb_to_recordset($1::jsonb) as r(sheet text, id text, errors jsonb)`,
+         from jsonb_to_recordset($1::text::jsonb) as r(sheet text, id text, errors jsonb)`,
         [JSON.stringify(rejected.slice(i, i + BATCH))],
       );
     }

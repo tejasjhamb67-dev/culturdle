@@ -188,7 +188,7 @@ export async function makeGuess(player: Player, edition: Edition, mode: Mode, in
 
     const next = applyGuess(st, guess, new Date().toISOString());
     await q(
-      `update plays set guesses = $5::jsonb, used_options = $6, solved = $7, guess_count = $8, points = $9,
+      `update plays set guesses = $5::text::jsonb, used_options = $6, solved = $7, guess_count = $8, points = $9,
               finished_at = case when $10 then now() else null end
        where player_id = $1 and play_date = $2::date and edition = $3 and mode = $4`,
       [player.id, date, edition, mode, JSON.stringify(next.guesses), next.usedOptions, next.solved,

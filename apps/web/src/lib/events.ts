@@ -4,7 +4,7 @@ export const CLIENT_EVENTS = new Set(["app_open", "share", "league_view", "invit
 
 export async function track(name: string, playerId: string | null, props: Record<string, unknown> = {}) {
   try {
-    await query(`insert into events (name, player_id, props) values ($1, $2, $3::jsonb)`, [
+    await query(`insert into events (name, player_id, props) values ($1, $2, $3::text::jsonb)`, [
       name, playerId, JSON.stringify(props),
     ]);
   } catch (e) {

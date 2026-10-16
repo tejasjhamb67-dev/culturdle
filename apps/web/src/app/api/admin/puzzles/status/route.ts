@@ -13,7 +13,7 @@ export const POST = handler(async (req: Request) => {
   if (!Array.isArray(ids) || ids.length === 0 || ids.length > 1000) throw new HttpError(400, "bad_ids");
   const rows = await query(
     `update puzzles set status = $2::puzzle_status, updated_at = now()
-     where id in (select jsonb_array_elements_text($1::jsonb)) returning id`,
+     where id in (select jsonb_array_elements_text($1::text::jsonb)) returning id`,
     [JSON.stringify(ids), status],
   );
   invalidatePools();

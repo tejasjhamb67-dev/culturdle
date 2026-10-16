@@ -41,10 +41,10 @@ export const PATCH = handler(async (req: Request, ctx: { params: Promise<{ id: s
   const [row] = await query(
     `update puzzles set
        answer = $2,
-       hints = array(select jsonb_array_elements_text($3::jsonb)),
-       wrong_options = array(select jsonb_array_elements_text($4::jsonb)),
+       hints = array(select jsonb_array_elements_text($3::text::jsonb)),
+       wrong_options = array(select jsonb_array_elements_text($4::text::jsonb)),
        reveal_fact = coalesce($5, reveal_fact),
-       aliases = case when $6::jsonb is null then aliases else array(select jsonb_array_elements_text($6::jsonb)) end,
+       aliases = case when $6::text::jsonb is null then aliases else array(select jsonb_array_elements_text($6::text::jsonb)) end,
        status = coalesce($7::puzzle_status, status),
        difficulty = coalesce($8::difficulty, difficulty),
        verify_flag = case when $9::boolean then $10 else verify_flag end,
