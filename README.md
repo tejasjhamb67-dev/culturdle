@@ -64,3 +64,4 @@ database server. Set `DATABASE_URL` to use Supabase or any other Postgres instea
 ## Deployments
 
 The Vercel project `culturdle-app` is connected to this GitHub repository: every push to the production branch (`claude/dreamy-rubin-36vvyz`, the repo default) deploys to https://culturdle.vercel.app, and pushes to other branches get preview URLs.
+`culturdle.vercel.app` belongs to the older `culturdle` project, which now only forwards every request to `culturdle-app.vercel.app` (a one-line rewrite), so it always serves the latest push.
