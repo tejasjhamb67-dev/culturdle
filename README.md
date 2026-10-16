@@ -60,3 +60,7 @@ database server. Set `DATABASE_URL` to use Supabase or any other Postgres instea
 - Culturdle+ billing (admin can grant Plus by friend code)
 - Ads
 - The content clean-up in concept §8 (rewriting Moment hints, verifying curated rows)
+
+## Deployments
+
+The Vercel project `culturdle-app` is connected to this GitHub repository: every push to the production branch (`claude/dreamy-rubin-36vvyz`, the repo default) deploys to https://culturdle.vercel.app, and pushes to other branches get preview URLs.
