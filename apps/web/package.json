@@ -17,6 +17,8 @@
   "dependencies": {
     "@culturdle/core": "workspace:*",
     "@electric-sql/pglite": "^0.5.10",
+    "exceljs": "^4.4.0",
+    "lucide-react": "^1.58.0",
     "next": "^16.4.2",
     "postgres": "^3.4.9",
     "react": "^19.3.1",
@@ -27,7 +29,6 @@
     "@types/node": "^24",
     "@types/react": "^19",
     "@types/react-dom": "^19",
-    "exceljs": "^4.4.0",
     "tailwindcss": "^4.3.3",
     "tsx": "^4.23.15",
     "typescript": "^5.9.3",

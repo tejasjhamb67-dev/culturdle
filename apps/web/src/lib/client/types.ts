@@ -55,3 +55,14 @@ export interface Me {
 }
 
 export interface LeagueRow { rank: number; playerId: string; name: string; score: number; streak: number; me: boolean }
+
+export interface PoolStats {
+  edition: Edition; mode: Mode; played: number; solved: number; solveRate: number; distribution: number[];
+  failed: number; points: number; winStreak: number; bestWinStreak: number; viaOptions: number;
+}
+export interface StatsView {
+  totals: { played: number; solved: number; points: number; daysPlayed: number };
+  perPool: PoolStats[];
+  perfectDays: Record<Edition, number>;
+  byDecade: { decade: string; played: number; solved: number }[] | null;
+}

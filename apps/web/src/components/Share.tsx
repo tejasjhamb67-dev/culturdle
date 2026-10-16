@@ -1,74 +1,36 @@
 "use client";
 
-import { useState } from "react";
+import { Share2 } from "lucide-react";
 import { trackClient } from "@/lib/client/api";
-import { Sheet } from "./Sheet";
+import { COPY } from "@/lib/client/copy";
+import { shareForDisplay } from "@/lib/client/prefs";
+import { Button } from "./Button";
 
-export function ShareButton({ text, imageUrl, className, label = "Share" }: { text: string; imageUrl?: string; className?: string; label?: string }) {
-  const [open, setOpen] = useState(false);
-  const [copied, setCopied] = useState(false);
-
-  const copy = async () => {
-    try {
-      await navigator.clipboard.writeText(text);
-      setCopied(true);
-      trackClient("share", { channel: "copy" });
-      setTimeout(() => setCopied(false), 1800);
-    } catch {}
-  };
-  const native = async () => {
+/** Web Share API where supported, otherwise copy to clipboard and say "Copied" (Foodle §6). */
+export async function shareText(raw: string, onCopied: (m: string) => void) {
+  const text = shareForDisplay(raw);
+  if (typeof navigator !== "undefined" && navigator.share && matchMedia("(pointer: coarse)").matches) {
     try {
       await navigator.share({ text });
       trackClient("share", { channel: "native" });
-    } catch {}
-  };
+      return;
+    } catch {
+      return;
+    }
+  }
+  try {
+    await navigator.clipboard.writeText(text);
+    trackClient("share", { channel: "clipboard" });
+    onCopied(COPY.copied);
+  } catch {
+    onCopied("Could not copy");
+  }
+}
 
+export function ShareButton({ text, onToast, label = "Share result", full = true, variant = "primary" }: { text: string; onToast: (m: string) => void; label?: string; full?: boolean; variant?: "primary" | "secondary" }) {
   return (
-    <>
-      <button onClick={() => setOpen(true)} className={className ?? "tap rounded-full bg-win px-6 py-3 font-semibold text-white"}>
-        {label}
-      </button>
-      <Sheet open={open} onClose={() => setOpen(false)} title="Share your result">
-        <pre className="mb-4 whitespace-pre-wrap rounded-2xl border border-line bg-bg p-4 font-sans text-[15px] leading-relaxed">{text}</pre>
-        <div className="grid grid-cols-2 gap-2">
-          <a
-            className="tap flex items-center justify-center rounded-2xl bg-[#25D366] px-3 py-3 font-semibold text-black"
-            href={`https://wa.me/?text=${encodeURIComponent(text)}`}
-            target="_blank"
-            rel="noreferrer"
-            onClick={() => trackClient("share", { channel: "whatsapp" })}
-          >
-            WhatsApp
-          </a>
-          <a
-            className="tap flex items-center justify-center rounded-2xl bg-text px-3 py-3 font-semibold text-bg"
-            href={`https://x.com/intent/post?text=${encodeURIComponent(text)}`}
-            target="_blank"
-            rel="noreferrer"
-            onClick={() => trackClient("share", { channel: "x" })}
-          >
-            Post on X
-          </a>
-          <button onClick={copy} className="tap rounded-2xl border border-line bg-surface-2 px-3 py-3 font-semibold">
-            {copied ? "Copied ✓" : "Copy text"}
-          </button>
-          {typeof navigator !== "undefined" && "share" in navigator ? (
-            <button onClick={native} className="tap rounded-2xl border border-line bg-surface-2 px-3 py-3 font-semibold">More…</button>
-          ) : (
-            <span />
-          )}
-          {imageUrl && (
-            <a
-              href={imageUrl}
-              download="culturdle-story.png"
-              className="tap col-span-2 flex items-center justify-center rounded-2xl bg-gradient-to-r from-movie via-music to-icon px-3 py-3 font-semibold text-white"
-              onClick={() => trackClient("share", { channel: "story" })}
-            >
-              Save Story image (1080×1920)
-            </a>
-          )}
-        </div>
-      </Sheet>
-    </>
+    <Button full={full} variant={variant} onClick={() => void shareText(text, onToast)}>
+      <Share2 size={18} aria-hidden /> {label}
+    </Button>
   );
 }

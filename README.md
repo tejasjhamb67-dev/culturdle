@@ -4,6 +4,7 @@ The daily pop-culture guessing game: six puzzles a day (a movie, a song or artis
 Global and an India edition), six guesses each, and a new hint after every miss.
 Design file (tokens, components, screens): https://www.figma.com/design/62rlGjVVopdopBPZH8fOTq
 Product docs: [`docs/CULTURDLE_CONCEPT.md`](docs/CULTURDLE_CONCEPT.md) and [`docs/CULTURDLE_DESIGN.md`](docs/CULTURDLE_DESIGN.md).
+Visual design follows the shared Foodle design system ([`docs/Foodle_Design_System.docx`](docs/Foodle_Design_System.docx)), which replaces §B4 of the Culturdle design note: Wordle palette (green = solved, yellow = solved from the options, grey = miss), Inter + Lora, tile wordmark, top bar + drawer on phones, three columns on desktop.
 
 ## Quick start (local, zero setup)
 

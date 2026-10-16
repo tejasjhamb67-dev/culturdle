@@ -1,9 +1,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { formatCountdown } from "@/lib/client/ui";
+import { COPY, formatCountdown } from "@/lib/client/copy";
 
-export function Countdown({ seconds, onZero }: { seconds: number; onZero?: () => void }) {
+export function Countdown({ seconds, onZero, prefix = COPY.countdown }: { seconds: number; onZero?: () => void; prefix?: string | null }) {
   const [left, setLeft] = useState(seconds);
   useEffect(() => {
     const start = Date.now();
@@ -19,7 +19,8 @@ export function Countdown({ seconds, onZero }: { seconds: number; onZero?: () =>
     return () => clearInterval(id);
   }, [seconds, onZero]);
   return (
-    <span className="font-display tabular-nums" aria-label={`Next puzzles in ${formatCountdown(left)}`} suppressHydrationWarning>
+    <span className="tabular-nums" suppressHydrationWarning>
+      {prefix ? `${prefix} ` : ""}
       {formatCountdown(left)}
     </span>
   );

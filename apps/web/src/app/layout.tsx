@@ -1,39 +1,38 @@
 import type { Metadata, Viewport } from "next";
-import { Bebas_Neue, Inter } from "next/font/google";
+import { Inter, Lora } from "next/font/google";
 import "./globals.css";
-import { TabBar } from "@/components/TabBar";
+import { Shell } from "@/components/Shell";
+import { PREFS_SCRIPT } from "@/lib/client/prefs";
 
-const bebas = Bebas_Neue({ weight: "400", subsets: ["latin"], variable: "--font-bebas", display: "swap" });
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter", display: "swap" });
+const lora = Lora({ subsets: ["latin"], weight: ["600"], variable: "--font-lora", display: "swap" });
 
 export const metadata: Metadata = {
   title: "Culturdle — the daily pop-culture puzzle",
-  description: "Six puzzles a day: a movie, a song and an icon, in a Global and an India edition. Six guesses, a new hint after every miss.",
+  description: "Guess the film, the song and the icon. Six guesses, a new hint after every miss. Global and India editions, every day.",
   manifest: "/manifest.webmanifest",
-  appleWebApp: { capable: true, title: "Culturdle", statusBarStyle: "black-translucent" },
+  appleWebApp: { capable: true, title: "Culturdle", statusBarStyle: "default" },
   openGraph: { title: "Culturdle", description: "Guess the film, the song and the icon. Every day." },
 };
 
 export const viewport: Viewport = {
-  themeColor: "#0E1116",
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#FFFFFF" },
+    { media: "(prefers-color-scheme: dark)", color: "#121213" },
+  ],
   width: "device-width",
   initialScale: 1,
   viewportFit: "cover",
 };
 
-const themeScript = `try{var t=localStorage.getItem('cd_theme')||'dark';if(t==='system')t=matchMedia('(prefers-color-scheme: light)').matches?'light':'dark';document.documentElement.dataset.theme=t}catch(e){}`;
-
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" data-theme="dark" className={`${bebas.variable} ${inter.variable}`} suppressHydrationWarning>
+    <html lang="en" className={`${inter.variable} ${lora.variable}`} suppressHydrationWarning>
       <head>
-        <script dangerouslySetInnerHTML={{ __html: themeScript }} />
+        <script dangerouslySetInnerHTML={{ __html: PREFS_SCRIPT }} />
       </head>
       <body>
-        <div className="mx-auto flex min-h-dvh max-w-xl flex-col px-4 pb-28 pt-[max(env(safe-area-inset-top),12px)]">
-          {children}
-        </div>
-        <TabBar />
+        <Shell>{children}</Shell>
       </body>
     </html>
   );

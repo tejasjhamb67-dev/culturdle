@@ -194,7 +194,8 @@ describe("shareText", () => {
     movie = applyGuess(movie, { text: "c", correct: true, skipped: false }, "t");
     const text = shareText({ puzzleNumber: 142, edition: "India", plays: { movie }, streak: 12, url: "culturdle.app" });
     expect(text).toBe(
-      "Culturdle #142 · India 🇮🇳\n🎬 🟥🟥🟩 3/6\n🎵 not played\n⭐ not played\n🔥 12-day streak\nculturdle.app",
+      "Culturdle #142 · India 🇮🇳\n🎬 ⬛⬛🟩 3/6\n🎵 not played\n⭐ not played\n🔥 12-day streak\nculturdle.app",
     );
+    expect(shareText({ puzzleNumber: 1, edition: "Global", plays: { movie }, streak: 0, url: "x", highContrast: true })).toContain("⬛⬛🟧 3/6");
   });
 });

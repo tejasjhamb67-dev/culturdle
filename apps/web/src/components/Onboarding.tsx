@@ -2,62 +2,71 @@
 
 import { useState } from "react";
 import type { Edition } from "@culturdle/core";
-import { Marquee } from "./Header";
-import { cx } from "@/lib/client/ui";
+import { trackClient } from "@/lib/client/api";
+import { cx } from "@/lib/client/copy";
+import { Wordmark } from "./Wordmark";
+import { Tile } from "./Tile";
+import { Button } from "./Button";
 
 const CARDS = [
-  { title: "Six puzzles a day", body: "A movie, a song and an icon — in a Global and an India edition. Everyone gets the same six.", art: ["🎬", "🎵", "⭐"] },
-  { title: "A new hint after every miss", body: "Hints start vague and get clearer. Typos never cost a guess — pick from the list.", art: ["1", "2", "3"] },
-  { title: "Options on your last guess", body: "Guess six shows four choices, so nobody leaves empty-handed. Then a countdown to tomorrow.", art: ["A", "B", "C", "D"] },
+  { title: "Guess the film, the song and the icon in six tries" },
+  { title: "Each miss reveals a hint" },
+  { title: "Pick your edition" },
 ];
 
-export function Onboarding({ onDone }: { onDone: (edition: Edition) => void }) {
+export function Onboarding({ onDone }: { onDone: (edition: Edition | null) => void }) {
   const [i, setI] = useState(0);
-  const last = i === CARDS.length;
+  const next = () => {
+    trackClient("app_open", { onboarding_step: i + 1 });
+    setI(i + 1);
+  };
   return (
-    <div className="fixed inset-0 z-50 flex flex-col bg-bg px-6 pb-10 pt-[max(env(safe-area-inset-top),24px)]">
-      <div className="mx-auto flex w-full max-w-md flex-1 flex-col">
-        <Marquee n={11} />
-        <h1 className="font-display mt-3 text-center text-5xl">CULTURDLE</h1>
-        <div className="flex flex-1 flex-col items-center justify-center text-center">
-          {!last ? (
-            <div key={i} className="hint-new">
-              <div className="mb-8 flex justify-center gap-3">
-                {CARDS[i].art.map((a, k) => (
-                  <span key={k} className="stub font-display flex h-20 w-16 items-center justify-center text-3xl" style={{ color: ["var(--movie)", "var(--music)", "var(--icon)", "var(--win)"][k] }}>
-                    {a}
-                  </span>
-                ))}
-              </div>
-              <h2 className="font-display text-4xl">{CARDS[i].title}</h2>
-              <p className="mt-3 text-lg text-muted">{CARDS[i].body}</p>
+    <div className="fixed inset-0 z-[70] flex flex-col bg-bg px-6 pb-[max(env(safe-area-inset-bottom),24px)] pt-[max(env(safe-area-inset-top),20px)]">
+      <div className="mx-auto flex w-full max-w-[420px] flex-1 flex-col">
+        <div className="flex h-12 items-center justify-between">
+          <Wordmark size={22} />
+          {i < 2 && <button onClick={() => onDone(null)} className="h-11 px-2 text-[15px] text-muted">Skip</button>}
+        </div>
+        <div key={i} className="rise flex flex-1 flex-col justify-center gap-6">
+          <h1 className="t-display">{CARDS[i].title}</h1>
+          {i === 0 && (
+            <div className="flex flex-col gap-2.5">
+              <p className="text-muted">Three puzzles in a Global and an India edition. Everyone gets the same six each day.</p>
+              <Tile state="correct">Solved — green</Tile>
+              <Tile state="present">Solved from the options — yellow</Tile>
+              <Tile state="absent">Not it — grey</Tile>
             </div>
-          ) : (
-            <div className="hint-new w-full">
-              <h2 className="font-display text-4xl">Pick your home edition</h2>
-              <p className="mt-2 text-muted">It shows first. The other is one tap away.</p>
-              <div className="mt-8 grid gap-3">
-                {(["India", "Global"] as Edition[]).map((e) => (
-                  <button key={e} onClick={() => onDone(e)} className="stub tap flex items-center gap-4 px-6 py-5 text-left">
-                    <span className="text-4xl">{e === "India" ? "🇮🇳" : "🌍"}</span>
-                    <span>
-                      <span className="font-display block text-3xl">{e}</span>
-                      <span className="text-sm text-muted">{e === "India" ? "Bollywood, Hindi songs, Indian icons" : "Hollywood, Billboard hits, global icons"}</span>
-                    </span>
-                  </button>
+          )}
+          {i === 1 && (
+            <div className="flex flex-col gap-2.5">
+              <p className="text-muted">Hints start broad and get sharper. On your sixth guess, four options appear.</p>
+              {["Theme: Action · 1970s", "Music by: R.D. Burman", "Directed by: Ramesh Sippy"].map((h, k) => (
+                <div key={h} className="rise flex items-center gap-3 rounded-[10px] bg-surface px-3 py-2.5" style={{ animationDelay: `${k * 250}ms` }}>
+                  <span className="t-label text-muted">{k + 1}</span>
+                  <span className="t-chip">{h}</span>
+                </div>
+              ))}
+              <div className="flex gap-2">
+                {[4, 5, 6].map((n) => (
+                  <span key={n} className="t-meta flex h-8 w-10 items-center justify-center rounded-[4px] border border-dashed border-border-strong text-muted">{n}</span>
                 ))}
               </div>
             </div>
           )}
-        </div>
-        {!last && (
-          <div className="flex items-center justify-between">
-            <div className="flex gap-2" aria-hidden>
-              {CARDS.map((_, k) => <span key={k} className={cx("h-2 rounded-full transition-all", k === i ? "w-6 bg-icon" : "w-2 bg-miss")} />)}
+          {i === 2 && (
+            <div className="flex flex-col gap-3">
+              <p className="text-muted">Your home edition shows first. The other is one tap away.</p>
+              <Button variant="secondary" full onClick={() => onDone("India")}>India — Bollywood, Hindi songs, Indian icons</Button>
+              <Button variant="secondary" full onClick={() => onDone("Global")}>Global — Hollywood, Billboard, world icons</Button>
             </div>
-            <button onClick={() => setI(i + 1)} className="tap rounded-full bg-icon px-7 py-3 font-semibold text-black">
-              {i === CARDS.length - 1 ? "Get started" : "Next"}
-            </button>
+          )}
+        </div>
+        {i < 2 && (
+          <div className="flex items-center justify-between">
+            <div className="flex gap-2" aria-label={`Card ${i + 1} of 3`}>
+              {CARDS.map((_, k) => <span key={k} className={cx("h-2 w-2 rounded-full", k === i ? "bg-text" : "bg-border")} />)}
+            </div>
+            <Button onClick={next} className="w-36">Next</Button>
           </div>
         )}
       </div>

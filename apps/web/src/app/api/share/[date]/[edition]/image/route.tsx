@@ -7,48 +7,49 @@ import { SITE_DOMAIN } from "@/lib/config";
 
 export const dynamic = "force-dynamic";
 
-const PIP_COLOR: Record<Pip, string> = { miss: "#E5484D", skip: "#3A3F4B", win: "#30A46C", options: "#F5D90A", lost: "#11141A" };
-const MODE_COLOR: Record<Mode, string> = { movie: "#E5484D", music: "#8E4EC6", icon: "#F5B83D" };
-const MODE_NAME: Record<Mode, string> = { movie: "MOVIE", music: "MUSIC", icon: "ICON" };
+const TILE: Record<Pip, string> = { miss: "#787C7E", skip: "#FFFFFF", win: "#6AAA64", options: "#C9B458", lost: "#787C7E" };
+const NAME: Record<Mode, string> = { movie: "Movie", music: "Music", icon: "Icon" };
+const WORD = "CULTURDLE".split("");
+const WORD_COLORS = ["#6AAA64", "#C9B458", "#787C7E", "#6AAA64", "#C9B458", "#6AAA64", "#787C7E", "#6AAA64", "#C9B458"];
 
-/** 1080×1920 Instagram Story image of the same spoiler-free grid. */
-export const GET = handler(async (_req: Request, ctx: { params: Promise<{ date: string; edition: string }> }) => {
+/** Share card: 1080 × 1350 (feed) or 1080 × 1920 with ?story=1. Same spoiler-free grid as the text. */
+export const GET = handler(async (req: Request, ctx: { params: Promise<{ date: string; edition: string }> }) => {
   const { date, edition: e } = await ctx.params;
   if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) throw new HttpError(400, "bad_date");
+  const story = new URL(req.url).searchParams.get("story") === "1";
   const edition = assertEdition(e);
   const s = await shareFor(await requirePlayer(), date, edition);
   return new ImageResponse(
     (
-      <div style={{ width: "100%", height: "100%", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", background: "linear-gradient(180deg,#0E1116 0%,#1b1420 60%,#0E1116 100%)", color: "#F4F1EA", fontFamily: "sans-serif" }}>
-        <div style={{ display: "flex", gap: 18, marginBottom: 40 }}>
-          {Array.from({ length: 9 }).map((_, i) => (
-            <div key={i} style={{ width: 22, height: 22, borderRadius: 11, background: "#F5B83D", opacity: i % 2 ? 0.55 : 1 }} />
+      <div style={{ width: "100%", height: "100%", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", background: "#FFFFFF", color: "#1A1A1B", fontFamily: "sans-serif" }}>
+        <div style={{ display: "flex", gap: 10 }}>
+          {WORD.map((l, i) => (
+            <div key={i} style={{ width: 84, height: 84, borderRadius: 6, background: WORD_COLORS[i], color: WORD_COLORS[i] === "#787C7E" ? "#FFFFFF" : "#1A1A1B", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 50, fontWeight: 800 }}>{l}</div>
           ))}
         </div>
-        <div style={{ fontSize: 150, fontWeight: 800, letterSpacing: 12 }}>CULTURDLE</div>
-        <div style={{ fontSize: 56, color: "#8A90A0", marginTop: 10 }}>{`#${s.puzzleNumber} · ${edition} edition`}</div>
-        <div style={{ display: "flex", flexDirection: "column", gap: 44, marginTop: 110 }}>
+        <div style={{ fontSize: 44, color: "#6E7174", marginTop: 36 }}>{`No. ${s.puzzleNumber} · ${edition} edition`}</div>
+        <div style={{ display: "flex", flexDirection: "column", gap: 34, marginTop: story ? 120 : 80 }}>
           {MODES.map((m) => {
             const st = s.states[m];
             const pips = st ? pipsFor(st) : [];
             const score = !st || !st.guesses.length ? "—" : !st.finished ? "…" : st.solved ? `${st.guesses.length}/${MAX_GUESSES}` : `X/${MAX_GUESSES}`;
             return (
-              <div key={m} style={{ display: "flex", alignItems: "center", gap: 28, background: "#181C24", borderRadius: 36, padding: "34px 44px", borderLeft: `16px solid ${MODE_COLOR[m]}` }}>
-                <div style={{ width: 210, fontSize: 52, fontWeight: 700, color: MODE_COLOR[m], letterSpacing: 4 }}>{MODE_NAME[m]}</div>
-                <div style={{ display: "flex", gap: 16 }}>
+              <div key={m} style={{ display: "flex", alignItems: "center", gap: 24 }}>
+                <div style={{ width: 170, fontSize: 40, fontWeight: 700 }}>{NAME[m]}</div>
+                <div style={{ display: "flex", gap: 12 }}>
                   {Array.from({ length: MAX_GUESSES }).map((_, i) => (
-                    <div key={i} style={{ width: 84, height: 84, borderRadius: 16, background: pips[i] ? PIP_COLOR[pips[i]] : "#232836", border: pips[i] === "lost" ? "4px solid #3A3F4B" : "none" }} />
+                    <div key={i} style={{ width: 92, height: 92, borderRadius: 6, background: pips[i] ? TILE[pips[i]] : "#FFFFFF", border: !pips[i] || pips[i] === "skip" ? "4px solid #D3D6DA" : "none" }} />
                   ))}
                 </div>
-                <div style={{ width: 150, textAlign: "right", fontSize: 60, fontWeight: 800, display: "flex", justifyContent: "flex-end" }}>{score}</div>
+                <div style={{ width: 120, fontSize: 44, fontWeight: 800, display: "flex", justifyContent: "flex-end" }}>{score}</div>
               </div>
             );
           })}
         </div>
-        {s.streak > 0 ? <div style={{ fontSize: 64, marginTop: 100, color: "#F5B83D", fontWeight: 700 }}>{`${s.streak}-day streak`}</div> : null}
-        <div style={{ fontSize: 48, marginTop: 70, color: "#8A90A0" }}>{SITE_DOMAIN}</div>
+        {s.streak > 0 ? <div style={{ fontSize: 44, marginTop: 90, fontWeight: 700 }}>{`${s.streak}-day streak`}</div> : null}
+        <div style={{ fontSize: 38, marginTop: 50, color: "#6E7174" }}>{SITE_DOMAIN}</div>
       </div>
     ),
-    { width: 1080, height: 1920, headers: { "Cache-Control": "private, no-store" } },
+    { width: 1080, height: story ? 1920 : 1350, headers: { "Cache-Control": "private, no-store" } },
   );
 });
